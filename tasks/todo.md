@@ -22,6 +22,7 @@
   - `panel -> notepad` smoke 稳定性修正（预填+自动确认，移除 UIAutomation 脆弱步骤）
   - 探针面板按输入焦点锚点就近弹出（无锚点时居中）
   - Windows 验证记录加入目标场景元数据，汇总新增目标覆盖率视图
+  - macOS 适配层最小骨架（`platform-macos`）与 `probe:mac:context` 脚本
   - 基础测试与类型检查链路
 
 ## Next Steps
@@ -32,6 +33,7 @@
   - 扩大到更多真实 App 的插入验证
 - 修正自动化 `panel -> notepad` smoke harness 的 PowerShell 对话框退出语义问题
 - Windows 最小链路跑通后，按同接口做 macOS `v0.0` 探针。
+- 在 macOS 真机上补齐焦点探测、插入与权限探针实现（当前仅骨架）。
 - 两端插入链路都验证后，再进入 `v0.1` AI 最小闭环。
 
 ## Open Questions

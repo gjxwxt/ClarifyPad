@@ -21,3 +21,7 @@
 ### implementation
 
 - 真实 App 验证日志需要同时记录“目标场景元数据”和“实际前台应用信息”；否则像 ChatGPT Web/Chrome 这类同进程场景在汇总里无法区分覆盖情况。
+
+### implementation
+
+- 跨平台适配层需要在非目标系统上给出明确错误码（例如 `platform_macos_unavailable_on_non_darwin`），避免把“运行环境不匹配”误诊为业务逻辑失败。
