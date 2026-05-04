@@ -12,6 +12,7 @@
     "probe:win:session": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-probe-session.ts",
     "probe:win:hotkey": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-hotkey-probe.ts",
     "probe:win:hotkey:listen": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-hotkey-listen.ts",
+    "probe:win:hotkey:panel": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-hotkey-panel.ts",
     "probe:win:doctor": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-doctor.ts",
     "probe:win:notepad": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-notepad-insert-check.ts",
     "probe:win:panel": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-probe-panel.ts",
