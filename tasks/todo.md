@@ -7,12 +7,12 @@
   - 共享 `PlatformBridge` 接口与探针结果模型
   - `TechnicalProbeService` 探针编排骨架
   - Windows PowerShell 前台应用上下文探针
+  - Windows UI Automation 焦点元素探针
   - 基础测试与类型检查链路
 
 ## Next Steps
 
 - 继续实现 Windows `v0.0` 技术探针闭环：
-  - 焦点/输入框识别
   - 选区或光标位置探测
   - 插入与 clipboard fallback 的真实验证
   - 最小浮层交互壳

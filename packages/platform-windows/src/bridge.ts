@@ -67,10 +67,57 @@ $process = Get-Process -Id $processId
   }
 
   async getFocusContext(): Promise<FocusContext> {
-    return {
-      hasFocusedInput: false,
-      fallbackReason: "windows_focus_probe_not_implemented_yet"
-    };
+    const script = `
+Add-Type -AssemblyName UIAutomationClient
+$focused = [System.Windows.Automation.AutomationElement]::FocusedElement
+if ($null -eq $focused) {
+  @{
+    hasFocusedInput = $false
+    fallbackReason = "no_focused_element"
+  } | ConvertTo-Json -Compress
+  exit 0
+}
+
+$controlType = $focused.Current.ControlType.ProgrammaticName
+$supportsValuePattern = $false
+$supportsTextPattern = $false
+$valuePattern = $null
+$textPattern = $null
+
+if ($focused.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern, [ref]$valuePattern)) {
+  $supportsValuePattern = $true
+}
+
+if ($focused.TryGetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern, [ref]$textPattern)) {
+  $supportsTextPattern = $true
+}
+
+$rect = $focused.Current.BoundingRectangle
+$isLikelyTextInput =
+  $controlType -eq "ControlType.Edit" -or
+  $controlType -eq "ControlType.Document" -or
+  $supportsValuePattern -or
+  $supportsTextPattern
+
+$elementRect = $null
+if ($rect.Width -gt 0 -and $rect.Height -gt 0) {
+  $elementRect = @{
+    x = [Math]::Round($rect.Left)
+    y = [Math]::Round($rect.Top)
+    width = [Math]::Round($rect.Width)
+    height = [Math]::Round($rect.Height)
+  }
+}
+
+@{
+  hasFocusedInput = $isLikelyTextInput
+  isPasswordField = $focused.Current.IsPassword
+  focusedElementRect = $elementRect
+  fallbackReason = $(if ($isLikelyTextInput) { $null } else { "focused_element_not_text_input" })
+} | ConvertTo-Json -Compress -Depth 3
+`;
+
+    return this.runJson<FocusContext>(script);
   }
 
   async showFloatingPanel(_anchor?: Rect): Promise<void> {
@@ -137,7 +184,7 @@ try {
   async getPlatformCapabilities(): Promise<PlatformCapabilities> {
     return {
       canReadActiveApp: true,
-      canDetectFocus: false,
+      canDetectFocus: true,
       canLocateCaret: false,
       canDirectInsert: false,
       canClipboardPasteFallback: true
