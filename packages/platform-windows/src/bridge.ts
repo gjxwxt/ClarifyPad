@@ -17,15 +17,18 @@ const execFileAsync = promisify(execFile);
 
 type WindowsBridgeOptions = {
   blacklistedAppIds?: string[];
+  preserveClipboardOnPaste?: boolean;
 };
 
 export class WindowsPowerShellBridge implements PlatformBridge {
   private readonly blacklisted: Set<string>;
+  private readonly preserveClipboardOnPaste: boolean;
 
   constructor(private readonly options: WindowsBridgeOptions = {}) {
     this.blacklisted = new Set(
       (this.options.blacklistedAppIds ?? []).map((value) => value.toLowerCase())
     );
+    this.preserveClipboardOnPaste = options.preserveClipboardOnPaste ?? true;
   }
 
   async registerGlobalHotkey(shortcut: string): Promise<boolean> {
@@ -202,17 +205,20 @@ if ($rect.Width -gt 0 -and $rect.Height -gt 0) {
 
   async insertText(request: InsertRequest): Promise<InsertResult> {
     const escapedText = toPowerShellSingleQuoted(request.text);
+    const preserveClipboard = this.preserveClipboardOnPaste;
     const script = `
 Add-Type -AssemblyName System.Windows.Forms
 $clipboardCaptured = $false
 $clipboardSet = $false
 $originalClipboard = ""
+${preserveClipboard ? `
 try {
   $originalClipboard = Get-Clipboard -Raw
   $clipboardCaptured = $true
 } catch {
   $originalClipboard = ""
 }
+` : ""}
 
 try {
   Set-Clipboard -Value '${escapedText}'
@@ -220,7 +226,7 @@ try {
   Start-Sleep -Milliseconds 40
   [System.Windows.Forms.SendKeys]::SendWait("^v")
   Start-Sleep -Milliseconds 50
-  if ($clipboardCaptured -and $null -ne $originalClipboard) {
+  if (${preserveClipboard ? "$clipboardCaptured -and $null -ne $originalClipboard" : "$false"}) {
     Set-Clipboard -Value $originalClipboard
   }
   @{

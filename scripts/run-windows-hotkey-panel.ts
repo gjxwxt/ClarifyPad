@@ -20,7 +20,8 @@ async function main(): Promise<void> {
   await mkdir(resolve("artifacts"), { recursive: true });
 
   const bridge = new WindowsPowerShellBridge({
-    blacklistedAppIds: ["1password", "bitwarden"]
+    blacklistedAppIds: ["1password", "bitwarden"],
+    preserveClipboardOnPaste: false
   });
   const telemetry = new JsonlProbeTelemetry(telemetryPath);
   const service = new TechnicalProbeService(bridge, telemetry);
