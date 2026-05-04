@@ -217,9 +217,9 @@ try {
 try {
   Set-Clipboard -Value '${escapedText}'
   $clipboardSet = $true
-  Start-Sleep -Milliseconds 120
+  Start-Sleep -Milliseconds 40
   [System.Windows.Forms.SendKeys]::SendWait("^v")
-  Start-Sleep -Milliseconds 120
+  Start-Sleep -Milliseconds 50
   if ($clipboardCaptured -and $null -ne $originalClipboard) {
     Set-Clipboard -Value $originalClipboard
   }

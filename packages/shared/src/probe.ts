@@ -65,7 +65,11 @@ export class TechnicalProbeService {
     private readonly telemetry: ProbeTelemetry
   ) {}
 
-  async start(): Promise<ProbeStartResult> {
+  async start(
+    options: {
+      skipFocusContext?: boolean;
+    } = {}
+  ): Promise<ProbeStartResult> {
     const activeApp = await this.bridge.getActiveApp();
     await this.telemetry.record("probe_started", {
       appName: activeApp.appName,
@@ -86,7 +90,12 @@ export class TechnicalProbeService {
       };
     }
 
-    const focusContext = await this.bridge.getFocusContext();
+    const focusContext = options.skipFocusContext
+      ? {
+          hasFocusedInput: false,
+          fallbackReason: "focus_probe_skipped"
+        }
+      : await this.bridge.getFocusContext();
     if (focusContext.isPasswordField) {
       await this.telemetry.record("probe_blocked", {
         appName: activeApp.appName,

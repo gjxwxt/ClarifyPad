@@ -1,5 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
+import { performance } from "node:perf_hooks";
 
 import { waitForWindowsHotkeyCapture } from "../packages/platform-windows/src/hotkey-listener.js";
 import { WindowsPowerShellBridge } from "../packages/platform-windows/src/bridge.js";
@@ -38,6 +39,7 @@ async function main(): Promise<void> {
   );
 
   while (true) {
+    const triggerAt = performance.now();
     const hotkeyResult = await waitForWindowsHotkeyCapture(
       options.shortcut,
       options.listenTimeoutMs
@@ -75,12 +77,15 @@ async function main(): Promise<void> {
       continue;
     }
 
-    const startResult = await service.start();
+    const startBegin = performance.now();
+    const startResult = await service.start({ skipFocusContext: true });
+    const startCostMs = Number((performance.now() - startBegin).toFixed(1));
     console.log(
       JSON.stringify(
         {
           phase: "start",
           telemetryPath,
+          costMs: startCostMs,
           result: startResult
         },
         null,
@@ -117,14 +122,37 @@ async function main(): Promise<void> {
     }
 
     await bridge.activateApp(startResult.activeApp);
-    await delay(250);
+    await delay(80);
 
+    const postFocusContext = await bridge.getFocusContext();
+    if (postFocusContext.isPasswordField) {
+      console.log(
+        JSON.stringify(
+          {
+            phase: "confirm_blocked",
+            reason: "password_field",
+            focusContext: postFocusContext
+          },
+          null,
+          2
+        )
+      );
+      if (options.once) {
+        return;
+      }
+      continue;
+    }
+
+    const confirmBegin = performance.now();
     const confirmResult = await service.confirm(startResult.activeApp, panelResult.rawInput);
+    const confirmCostMs = Number((performance.now() - confirmBegin).toFixed(1));
     console.log(
       JSON.stringify(
         {
           phase: "confirm",
           telemetryPath,
+          costMs: confirmCostMs,
+          totalAfterHotkeyMs: Number((performance.now() - triggerAt).toFixed(1)),
           result: confirmResult
         },
         null,
