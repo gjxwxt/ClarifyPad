@@ -25,6 +25,7 @@
   - macOS 适配层最小骨架（`platform-macos`）与 `probe:mac:context` 脚本
   - Windows 全局快捷键注册可行性探针（`probe:win:hotkey`）
   - Windows 环境体检命令（`probe:win:doctor`）用于集中检查关键链路
+  - Windows 矩阵探针会话脚本（`probe:win:matrix:probe`）一轮完成“执行+记录”
   - 基础测试与类型检查链路
 
 ## Next Steps

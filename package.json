@@ -16,6 +16,7 @@
     "probe:win:panel": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-probe-panel.ts",
     "probe:win:panel:record": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-probe-panel-record.ts",
     "probe:win:panel:notepad": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-panel-notepad-check.ts",
+    "probe:win:matrix:probe": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-matrix-probe.ts",
     "probe:win:record": "node ./node_modules/tsx/dist/cli.mjs scripts/record-windows-app-verification.ts",
     "probe:win:summary": "node ./node_modules/tsx/dist/cli.mjs scripts/summarize-windows-app-verification.ts",
     "probe:win:matrix": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-app-matrix-session.ts",
