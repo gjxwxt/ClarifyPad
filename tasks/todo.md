@@ -10,6 +10,7 @@
   - Windows UI Automation 焦点元素探针
   - 密码框阻断保护
   - Windows 手动插入探针脚本
+  - 本地 JSONL telemetry 与 probe session runner
   - 基础测试与类型检查链路
 
 ## Next Steps
