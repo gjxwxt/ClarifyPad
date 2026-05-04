@@ -59,11 +59,30 @@ $process = Get-Process -Id $processId
 @{
   appName = $process.ProcessName
   appId = $process.ProcessName
+  processId = [int]$processId
   windowTitle = $builder.ToString()
 } | ConvertTo-Json -Compress
 `;
 
     return this.runJson<ActiveApp>(script);
+  }
+
+  async activateApp(app: ActiveApp): Promise<boolean> {
+    if (!app.processId) {
+      return false;
+    }
+
+    const script = `
+$wshell = New-Object -ComObject WScript.Shell
+if ($wshell.AppActivate(${app.processId})) {
+  "true"
+} else {
+  "false"
+}
+`;
+
+    const stdout = await this.runScript(script);
+    return stdout.trim().toLowerCase() === "true";
   }
 
   async getFocusContext(): Promise<FocusContext> {

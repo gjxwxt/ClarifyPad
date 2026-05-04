@@ -37,6 +37,10 @@ class FakeBridge implements PlatformBridge {
     return this.app;
   }
 
+  async activateApp(): Promise<boolean> {
+    return true;
+  }
+
   async getFocusContext(): Promise<FocusContext> {
     return this.focusContext;
   }

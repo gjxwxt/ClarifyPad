@@ -8,6 +8,7 @@ export type Rect = {
 export type ActiveApp = {
   appName: string;
   appId: string;
+  processId?: number;
   windowTitle?: string;
 };
 
@@ -47,6 +48,7 @@ export type InsertResult = {
 export interface PlatformBridge {
   registerGlobalHotkey(shortcut: string): Promise<boolean>;
   getActiveApp(): Promise<ActiveApp>;
+  activateApp(app: ActiveApp): Promise<boolean>;
   getFocusContext(): Promise<FocusContext>;
   showFloatingPanel(anchor?: Rect): Promise<void>;
   insertText(request: InsertRequest): Promise<InsertResult>;
