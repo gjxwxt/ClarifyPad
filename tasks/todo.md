@@ -8,6 +8,8 @@
   - `TechnicalProbeService` 探针编排骨架
   - Windows PowerShell 前台应用上下文探针
   - Windows UI Automation 焦点元素探针
+  - 密码框阻断保护
+  - Windows 手动插入探针脚本
   - 基础测试与类型检查链路
 
 ## Next Steps

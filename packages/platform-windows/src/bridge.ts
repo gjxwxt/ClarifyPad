@@ -128,19 +128,23 @@ if ($rect.Width -gt 0 -and $rect.Height -gt 0) {
     const escapedText = toPowerShellSingleQuoted(request.text);
     const script = `
 Add-Type -AssemblyName System.Windows.Forms
+$clipboardCaptured = $false
+$clipboardSet = $false
 $originalClipboard = ""
 try {
   $originalClipboard = Get-Clipboard -Raw
+  $clipboardCaptured = $true
 } catch {
   $originalClipboard = ""
 }
 
 try {
   Set-Clipboard -Value '${escapedText}'
+  $clipboardSet = $true
   Start-Sleep -Milliseconds 120
   [System.Windows.Forms.SendKeys]::SendWait("^v")
   Start-Sleep -Milliseconds 120
-  if ($null -ne $originalClipboard) {
+  if ($clipboardCaptured -and $null -ne $originalClipboard) {
     Set-Clipboard -Value $originalClipboard
   }
   @{
@@ -149,12 +153,21 @@ try {
     manualPasteRequired = $false
   } | ConvertTo-Json -Compress
 } catch {
-  @{
-    success = $false
-    method = "copied_only"
-    manualPasteRequired = $true
-    errorCode = "windows_clipboard_paste_failed"
-  } | ConvertTo-Json -Compress
+  if ($clipboardSet) {
+    @{
+      success = $true
+      method = "copied_only"
+      manualPasteRequired = $true
+      errorCode = "windows_clipboard_paste_failed"
+    } | ConvertTo-Json -Compress
+  } else {
+    @{
+      success = $false
+      method = "copied_only"
+      manualPasteRequired = $true
+      errorCode = "windows_clipboard_set_failed"
+    } | ConvertTo-Json -Compress
+  }
 }
 `;
 

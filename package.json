@@ -7,7 +7,8 @@
     "typecheck": "node ./node_modules/typescript/bin/tsc --noEmit",
     "test": "node ./node_modules/vitest/vitest.mjs run",
     "test:watch": "node ./node_modules/vitest/vitest.mjs",
-    "probe:win:context": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-context-probe.ts"
+    "probe:win:context": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-context-probe.ts",
+    "probe:win:insert": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-insert-probe.ts"
   },
   "devDependencies": {
     "@types/node": "^22.15.17",

@@ -29,7 +29,7 @@ export interface ProbeTelemetry {
 export type ProbeStartResult =
   | {
       status: "blocked";
-      reason: "app_blacklisted";
+      reason: "app_blacklisted" | "password_field";
       activeApp: ActiveApp;
     }
   | {
@@ -87,6 +87,20 @@ export class TechnicalProbeService {
     }
 
     const focusContext = await this.bridge.getFocusContext();
+    if (focusContext.isPasswordField) {
+      await this.telemetry.record("probe_blocked", {
+        appName: activeApp.appName,
+        appId: activeApp.appId,
+        fallbackReason: "password_field"
+      });
+
+      return {
+        status: "blocked",
+        reason: "password_field",
+        activeApp
+      };
+    }
+
     const anchorRect = focusContext.caretRect ?? focusContext.focusedElementRect;
     await this.bridge.showFloatingPanel(anchorRect);
 

@@ -125,6 +125,46 @@ describe("TechnicalProbeService", () => {
     ]);
   });
 
+  it("blocks probe startup for password fields", async () => {
+    const bridge = new FakeBridge(
+      { appName: "Chrome", appId: "chrome" },
+      { hasFocusedInput: true, isPasswordField: true },
+      {
+        success: true,
+        method: "direct",
+        manualPasteRequired: false
+      }
+    );
+    const telemetry = new FakeTelemetry();
+    const service = new TechnicalProbeService(bridge, telemetry);
+
+    const result = await service.start();
+
+    expect(result).toEqual({
+      status: "blocked",
+      reason: "password_field",
+      activeApp: { appName: "Chrome", appId: "chrome" }
+    });
+    expect(bridge.shownAnchors).toEqual([]);
+    expect(telemetry.events).toEqual([
+      {
+        event: "probe_started",
+        payload: {
+          appName: "Chrome",
+          appId: "chrome"
+        }
+      },
+      {
+        event: "probe_blocked",
+        payload: {
+          appName: "Chrome",
+          appId: "chrome",
+          fallbackReason: "password_field"
+        }
+      }
+    ]);
+  });
+
   it("anchors the floating panel to the caret rect when available", async () => {
     const caretRect = { x: 10, y: 20, width: 30, height: 40 };
     const bridge = new FakeBridge(
