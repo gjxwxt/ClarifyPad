@@ -89,6 +89,10 @@ async function runPanelProcess(): Promise<{
 async function submitPanelInput(rawInput: string): Promise<void> {
   const command = `
 Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName System.Windows.Forms
+$inputApplied = $false
+
+try {
 $root = [System.Windows.Automation.AutomationElement]::RootElement
 $windowCondition = New-Object System.Windows.Automation.PropertyCondition(
   [System.Windows.Automation.AutomationElement]::NameProperty,
@@ -109,26 +113,38 @@ if ($null -eq $window) {
   throw 'ClarifyPad Probe window not found.'
 }
 
-$editCondition = New-Object System.Windows.Automation.PropertyCondition(
-  [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
-  [System.Windows.Automation.ControlType]::Edit
-)
-$inputBox = $window.FindFirst(
+$allDescendants = $window.FindAll(
   [System.Windows.Automation.TreeScope]::Descendants,
-  $editCondition
+  [System.Windows.Automation.Condition]::TrueCondition
 )
 
-if ($null -eq $inputBox) {
-  throw 'Probe input box not found.'
+$targetInput = $null
+$valuePattern = $null
+for ($idx = 0; $idx -lt $allDescendants.Count; $idx++) {
+  $candidate = $allDescendants.Item($idx)
+  $candidateValuePattern = $null
+  if ($candidate.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern, [ref]$candidateValuePattern)) {
+    if (-not $candidate.Current.IsKeyboardFocusable) {
+      continue
+    }
+
+    if (-not $candidate.Current.IsEnabled) {
+      continue
+    }
+
+    $targetInput = $candidate
+    $valuePattern = $candidateValuePattern
+    break
+  }
 }
 
-$valuePattern = $null
-if (-not $inputBox.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern, [ref]$valuePattern)) {
-  throw 'Probe input box does not support ValuePattern.'
+if ($null -eq $targetInput -or $null -eq $valuePattern) {
+  throw 'Probe input box not found for UI Automation.'
 }
 
 $valuePattern.SetValue('${toPowerShellSingleQuoted(rawInput)}')
 Start-Sleep -Milliseconds 150
+$inputApplied = $true
 
 $buttonCondition = New-Object System.Windows.Automation.AndCondition(
   (New-Object System.Windows.Automation.PropertyCondition(
@@ -155,6 +171,20 @@ if (-not $confirmButton.TryGetCurrentPattern([System.Windows.Automation.InvokePa
 }
 
 $invokePattern.Invoke()
+} catch {
+  # Fallback for environments where UI Automation cannot resolve WinForms textbox patterns.
+  Set-Clipboard -Value '${toPowerShellSingleQuoted(rawInput)}'
+  $wshell = New-Object -ComObject WScript.Shell
+  [void]$wshell.AppActivate('ClarifyPad Probe')
+  Start-Sleep -Milliseconds 250
+  if (-not $inputApplied) {
+    [System.Windows.Forms.SendKeys]::SendWait('^a')
+    Start-Sleep -Milliseconds 120
+    [System.Windows.Forms.SendKeys]::SendWait('^v')
+  }
+  Start-Sleep -Milliseconds 120
+  [System.Windows.Forms.SendKeys]::SendWait('^{ENTER}')
+}
 `;
 
   await runPowerShell(command);

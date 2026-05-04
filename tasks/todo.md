@@ -15,6 +15,7 @@
   - 最小 Windows 探针面板与焦点恢复链路
   - 去除 `v0.0` 探针输出的 `[整理后]` 前缀
   - 真实 App 手工验证记录能力
+  - 真实 App 验证结果汇总统计能力
   - 基础测试与类型检查链路
 
 ## Next Steps
@@ -24,6 +25,7 @@
   - 最小浮层交互壳
   - 扩大到更多真实 App 的插入验证
 - 修正自动化 `panel -> notepad` smoke harness 的 PowerShell 对话框退出语义问题
+- 修正自动化 `panel -> notepad` smoke harness 的 UIAutomation 输入框识别不稳定问题
 - Windows 最小链路跑通后，按同接口做 macOS `v0.0` 探针。
 - 两端插入链路都验证后，再进入 `v0.1` AI 最小闭环。
 
