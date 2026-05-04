@@ -11,6 +11,7 @@ import type {
   PlatformCapabilities,
   Rect
 } from "../../shared/src/index.js";
+import { parseWindowsHotkey } from "./hotkey.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -27,8 +28,38 @@ export class WindowsPowerShellBridge implements PlatformBridge {
     );
   }
 
-  async registerGlobalHotkey(_shortcut: string): Promise<boolean> {
-    return false;
+  async registerGlobalHotkey(shortcut: string): Promise<boolean> {
+    const parsed = parseWindowsHotkey(shortcut);
+    if (!parsed) {
+      return false;
+    }
+
+    const script = `
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+
+public static class HotkeyApi {
+  [DllImport("user32.dll", SetLastError=true)]
+  public static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+  [DllImport("user32.dll", SetLastError=true)]
+  public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+}
+"@
+
+$hotkeyId = 1193046
+$registered = [HotkeyApi]::RegisterHotKey([IntPtr]::Zero, $hotkeyId, ${parsed.modifiers}, ${parsed.virtualKey})
+if ($registered) {
+  [void][HotkeyApi]::UnregisterHotKey([IntPtr]::Zero, $hotkeyId)
+  "true"
+} else {
+  "false"
+}
+`;
+
+    const stdout = await this.runScript(script);
+    return stdout.trim().toLowerCase() === "true";
   }
 
   async getActiveApp(): Promise<ActiveApp> {

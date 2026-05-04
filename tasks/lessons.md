@@ -25,3 +25,7 @@
 ### implementation
 
 - 跨平台适配层需要在非目标系统上给出明确错误码（例如 `platform_macos_unavailable_on_non_darwin`），避免把“运行环境不匹配”误诊为业务逻辑失败。
+
+### implementation
+
+- Windows 全局热键探针先做“可注册性验证”（注册后立即释放），可以快速验证冲突/权限问题；持续监听放到下一阶段桌面壳实现。

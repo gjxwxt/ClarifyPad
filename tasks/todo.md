@@ -23,6 +23,7 @@
   - 探针面板按输入焦点锚点就近弹出（无锚点时居中）
   - Windows 验证记录加入目标场景元数据，汇总新增目标覆盖率视图
   - macOS 适配层最小骨架（`platform-macos`）与 `probe:mac:context` 脚本
+  - Windows 全局快捷键注册可行性探针（`probe:win:hotkey`）
   - 基础测试与类型检查链路
 
 ## Next Steps
