@@ -140,7 +140,7 @@ async function main(): Promise<void> {
 
 function parseOptions(argv: string[]): ScriptOptions {
   const options: ScriptOptions = {
-    shortcut: "Ctrl+Shift+Space",
+    shortcut: "RightAlt",
     listenTimeoutMs: 60000,
     once: false
   };

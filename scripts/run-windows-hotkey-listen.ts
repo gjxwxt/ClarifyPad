@@ -1,7 +1,7 @@
 import { waitForWindowsHotkeyCapture } from "../packages/platform-windows/src/hotkey-listener.js";
 
 async function main(): Promise<void> {
-  const shortcut = process.argv[2]?.trim() || "Ctrl+Shift+Space";
+  const shortcut = process.argv[2]?.trim() || "RightAlt";
   const timeoutMs = parseTimeoutMs(process.argv[3]);
   const result = await waitForWindowsHotkeyCapture(shortcut, timeoutMs);
   console.log(JSON.stringify(result, null, 2));

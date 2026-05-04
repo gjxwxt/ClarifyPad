@@ -15,6 +15,10 @@ export async function waitForWindowsHotkeyCapture(
   shortcut: string,
   timeoutMs: number
 ): Promise<WindowsHotkeyListenResult> {
+  if (isRightAltShortcut(shortcut)) {
+    return waitForRightAltCapture(timeoutMs);
+  }
+
   const parsed = parseWindowsHotkey(shortcut);
   if (!parsed) {
     throw new Error(`Invalid hotkey shortcut: ${shortcut}`);
@@ -109,6 +113,61 @@ try {
   return JSON.parse(stdout.trim()) as WindowsHotkeyListenResult;
 }
 
+async function waitForRightAltCapture(
+  timeoutMs: number
+): Promise<WindowsHotkeyListenResult> {
+  const normalizedTimeout = normalizeTimeoutMs(timeoutMs);
+  const command = `
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+
+public static class KeyProbeNative {
+  [DllImport("user32.dll")]
+  public static extern short GetAsyncKeyState(int vKey);
+}
+"@
+
+$vkRMenu = 0xA5
+$deadline = (Get-Date).AddMilliseconds(${normalizedTimeout})
+$wasDown = $false
+$status = "timeout"
+
+while ((Get-Date) -lt $deadline) {
+  $state = [KeyProbeNative]::GetAsyncKeyState($vkRMenu)
+  $isDown = (($state -band 0x8000) -ne 0)
+  if ($isDown -and -not $wasDown) {
+    $status = "captured"
+    break
+  }
+  $wasDown = $isDown
+  Start-Sleep -Milliseconds 20
+}
+
+@{
+  status = $status
+  shortcut = "RightAlt"
+  timeoutMs = ${normalizedTimeout}
+} | ConvertTo-Json -Compress
+`;
+
+  const { stdout } = await execFileAsync(
+    "powershell.exe",
+    [
+      "-NoProfile",
+      "-NonInteractive",
+      "-Command",
+      `$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new();\n${command}`
+    ],
+    {
+      windowsHide: false,
+      maxBuffer: 1024 * 1024
+    }
+  );
+
+  return JSON.parse(stdout.trim()) as WindowsHotkeyListenResult;
+}
+
 function normalizeTimeoutMs(value: number): number {
   if (!Number.isFinite(value) || value <= 0) {
     return 10000;
@@ -119,4 +178,9 @@ function normalizeTimeoutMs(value: number): number {
 
 function escapeForPowerShell(value: string): string {
   return value.replace(/"/g, '\\"');
+}
+
+function isRightAltShortcut(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  return normalized === "rightalt" || normalized === "ralt" || normalized === "alt_r";
 }
