@@ -29,6 +29,8 @@ async function main(): Promise<void> {
     const log = new AppVerificationLog(filePath);
     await log.append({
       platform: "windows",
+      targetAppName: activeApp.appName,
+      targetAppIdHint: activeApp.appId,
       appName: activeApp.appName,
       appId: activeApp.appId,
       processId: activeApp.processId,

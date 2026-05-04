@@ -3,6 +3,9 @@ import { dirname } from "node:path";
 
 export type AppVerificationRecord = {
   platform: "windows" | "macos";
+  targetAppName?: string;
+  targetAppIdHint?: string;
+  targetScenario?: string;
   appName: string;
   appId: string;
   processId?: number;

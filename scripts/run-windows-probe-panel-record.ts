@@ -14,6 +14,7 @@ import {
 import { WindowsPowerShellBridge } from "../packages/platform-windows/src/bridge.js";
 
 async function main(): Promise<void> {
+  const options = parseOptions(process.argv.slice(2));
   const artifactsDir = resolve("artifacts");
   const telemetryPath = resolve(artifactsDir, "probe-events.jsonl");
   const verificationPath = resolve(artifactsDir, "app-verification.jsonl");
@@ -45,7 +46,9 @@ async function main(): Promise<void> {
       return;
     }
 
-    const panelResult = await showProbePanel(startResult.activeApp);
+    const panelResult = await showProbePanel(startResult.activeApp, {
+      anchorRect: startResult.anchorRect
+    });
     if (panelResult.action === "cancel") {
       console.log(
         JSON.stringify(
@@ -96,6 +99,9 @@ async function main(): Promise<void> {
 
     const record: AppVerificationRecord = {
       platform: "windows",
+      targetAppName: options.targetAppName ?? execution.activeApp.appName,
+      targetAppIdHint: options.targetAppIdHint ?? execution.activeApp.appId,
+      targetScenario: options.targetScenario,
       appName: execution.activeApp.appName,
       appId: execution.activeApp.appId,
       processId: execution.activeApp.processId,
@@ -123,6 +129,43 @@ async function main(): Promise<void> {
   } finally {
     rl.close();
   }
+}
+
+type ScriptOptions = {
+  targetAppName?: string;
+  targetAppIdHint?: string;
+  targetScenario?: string;
+};
+
+function parseOptions(argv: string[]): ScriptOptions {
+  const options: ScriptOptions = {};
+
+  for (let i = 0; i < argv.length; i += 1) {
+    const value = argv[i];
+    const next = argv[i + 1];
+    if (!next) {
+      continue;
+    }
+
+    if (value === "--target-app") {
+      options.targetAppName = next;
+      i += 1;
+      continue;
+    }
+
+    if (value === "--target-id") {
+      options.targetAppIdHint = next;
+      i += 1;
+      continue;
+    }
+
+    if (value === "--target-scenario") {
+      options.targetScenario = next;
+      i += 1;
+    }
+  }
+
+  return options;
 }
 
 function delay(ms: number): Promise<void> {

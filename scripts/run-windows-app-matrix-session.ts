@@ -37,6 +37,11 @@ async function main(): Promise<void> {
       }
 
       const activeApp = await bridge.getActiveApp();
+      if (normalize(activeApp.appName) !== normalize(target.appName)) {
+        console.log(
+          `提示：当前前台应用是 ${activeApp.appName}，与目标 ${target.appName} 不一致，请确认后再记录。`
+        );
+      }
       const result = normalizeResult(
         await rl.question("结果 pass / fail / manual_paste: ")
       );
@@ -47,6 +52,9 @@ async function main(): Promise<void> {
 
       const record: AppVerificationRecord = {
         platform: "windows",
+        targetAppName: target.appName,
+        targetAppIdHint: target.appIdHint,
+        targetScenario: target.scenario,
         appName: activeApp.appName || target.appName,
         appId: activeApp.appId || target.appIdHint,
         processId: activeApp.processId,
@@ -93,6 +101,10 @@ function normalizeMethod(
   throw new Error(
     "Verification method must be direct, clipboard_paste, copied_only, or unknown."
   );
+}
+
+function normalize(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 main().catch((error: unknown) => {

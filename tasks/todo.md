@@ -21,6 +21,7 @@
   - 探针面板驱动的验证记录脚本（`probe:win:panel:record`）
   - `panel -> notepad` smoke 稳定性修正（预填+自动确认，移除 UIAutomation 脆弱步骤）
   - 探针面板按输入焦点锚点就近弹出（无锚点时居中）
+  - Windows 验证记录加入目标场景元数据，汇总新增目标覆盖率视图
   - 基础测试与类型检查链路
 
 ## Next Steps

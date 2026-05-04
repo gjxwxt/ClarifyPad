@@ -3,7 +3,9 @@ import { resolve } from "node:path";
 
 import {
   parseVerificationJsonl,
-  summarizeVerificationRecords
+  summarizeTargetCoverage,
+  summarizeVerificationRecords,
+  WINDOWS_TARGET_APPS
 } from "../packages/storage/src/index.js";
 
 async function main(): Promise<void> {
@@ -11,6 +13,7 @@ async function main(): Promise<void> {
   const content = await readFile(filePath, "utf8");
   const records = parseVerificationJsonl(content);
   const summary = summarizeVerificationRecords(records);
+  const coverage = summarizeTargetCoverage(records, WINDOWS_TARGET_APPS);
 
   const passRate =
     summary.total === 0 ? 0 : Number(((summary.pass / summary.total) * 100).toFixed(1));
@@ -24,7 +27,8 @@ async function main(): Promise<void> {
         fail: summary.fail,
         manualPaste: summary.manualPaste,
         passRate,
-        byApp: summary.byApp
+        byApp: summary.byApp,
+        coverage
       },
       null,
       2

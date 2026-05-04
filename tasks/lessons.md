@@ -17,3 +17,7 @@
 ### gotcha
 
 - Windows WinForms 面板的 UIAutomation 控件识别在不同环境下不稳定；自动化 smoke 优先走“面板预填 + 自动确认”通道，避免把探针结果误判成 UIA 噪声。
+
+### implementation
+
+- 真实 App 验证日志需要同时记录“目标场景元数据”和“实际前台应用信息”；否则像 ChatGPT Web/Chrome 这类同进程场景在汇总里无法区分覆盖情况。
