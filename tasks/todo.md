@@ -16,6 +16,7 @@
   - 去除 `v0.0` 探针输出的 `[整理后]` 前缀
   - 真实 App 手工验证记录能力
   - 真实 App 验证结果汇总统计能力
+  - Windows `caretRect` 探测尝试（基于 TextPattern 选区矩形）
   - 基础测试与类型检查链路
 
 ## Next Steps

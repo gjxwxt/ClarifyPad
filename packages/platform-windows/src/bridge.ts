@@ -102,6 +102,7 @@ $supportsValuePattern = $false
 $supportsTextPattern = $false
 $valuePattern = $null
 $textPattern = $null
+$caretRect = $null
 
 if ($focused.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern, [ref]$valuePattern)) {
   $supportsValuePattern = $true
@@ -109,6 +110,22 @@ if ($focused.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Patt
 
 if ($focused.TryGetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern, [ref]$textPattern)) {
   $supportsTextPattern = $true
+  try {
+    $selectionRanges = $textPattern.GetSelection()
+    if ($null -ne $selectionRanges -and $selectionRanges.Length -gt 0) {
+      $rectangles = $selectionRanges[0].GetBoundingRectangles()
+      if ($null -ne $rectangles -and $rectangles.Length -ge 4) {
+        $caretRect = @{
+          x = [Math]::Round($rectangles[0])
+          y = [Math]::Round($rectangles[1])
+          width = [Math]::Round($rectangles[2])
+          height = [Math]::Round($rectangles[3])
+        }
+      }
+    }
+  } catch {
+    $caretRect = $null
+  }
 }
 
 $rect = $focused.Current.BoundingRectangle
@@ -131,8 +148,17 @@ if ($rect.Width -gt 0 -and $rect.Height -gt 0) {
 @{
   hasFocusedInput = $isLikelyTextInput
   isPasswordField = $focused.Current.IsPassword
+  caretRect = $caretRect
   focusedElementRect = $elementRect
-  fallbackReason = $(if ($isLikelyTextInput) { $null } else { "focused_element_not_text_input" })
+  fallbackReason = $(
+    if (-not $isLikelyTextInput) {
+      "focused_element_not_text_input"
+    } elseif ($null -eq $caretRect) {
+      "caret_unavailable"
+    } else {
+      $null
+    }
+  )
 } | ConvertTo-Json -Compress -Depth 3
 `;
 
@@ -217,7 +243,7 @@ try {
     return {
       canReadActiveApp: true,
       canDetectFocus: true,
-      canLocateCaret: false,
+      canLocateCaret: true,
       canDirectInsert: false,
       canClipboardPasteFallback: true
     };
