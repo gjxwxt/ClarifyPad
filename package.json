@@ -9,7 +9,8 @@
     "test:watch": "node ./node_modules/vitest/vitest.mjs",
     "probe:win:context": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-context-probe.ts",
     "probe:win:insert": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-insert-probe.ts",
-    "probe:win:session": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-probe-session.ts"
+    "probe:win:session": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-probe-session.ts",
+    "probe:win:notepad": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-notepad-insert-check.ts"
   },
   "devDependencies": {
     "@types/node": "^22.15.17",

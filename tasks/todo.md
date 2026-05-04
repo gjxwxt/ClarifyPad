@@ -11,14 +11,15 @@
   - 密码框阻断保护
   - Windows 手动插入探针脚本
   - 本地 JSONL telemetry 与 probe session runner
+  - 受控 Notepad 宿主下的真实插入链路验证
   - 基础测试与类型检查链路
 
 ## Next Steps
 
 - 继续实现 Windows `v0.0` 技术探针闭环：
   - 选区或光标位置探测
-  - 插入与 clipboard fallback 的真实验证
   - 最小浮层交互壳
+  - 扩大到更多真实 App 的插入验证
 - Windows 最小链路跑通后，按同接口做 macOS `v0.0` 探针。
 - 两端插入链路都验证后，再进入 `v0.1` AI 最小闭环。
 
