@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
-import type { ActiveApp } from "../../shared/src/index.js";
+import type { ActiveApp, Rect } from "../../shared/src/index.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -14,8 +14,17 @@ export type ProbePanelResult =
       action: "cancel";
     };
 
-export async function showProbePanel(activeApp: ActiveApp): Promise<ProbePanelResult> {
-  const script = buildProbePanelScript(activeApp);
+export type ProbePanelOptions = {
+  prefillText?: string;
+  autoConfirmDelayMs?: number;
+  anchorRect?: Rect;
+};
+
+export async function showProbePanel(
+  activeApp: ActiveApp,
+  options: ProbePanelOptions = {}
+): Promise<ProbePanelResult> {
+  const script = buildProbePanelScript(activeApp, options);
   let stdout = "";
 
   try {
@@ -76,9 +85,40 @@ export function parseProbePanelOutput(output: string): ProbePanelResult {
   throw new Error("Probe panel returned unsupported action.");
 }
 
-function buildProbePanelScript(activeApp: ActiveApp): string {
+function buildProbePanelScript(
+  activeApp: ActiveApp,
+  options: ProbePanelOptions
+): string {
   const appLabel = escapeForPowerShell(activeApp.appName || activeApp.appId);
   const titleLabel = escapeForPowerShell(activeApp.windowTitle ?? "");
+  const prefillText = escapeForPowerShell(options.prefillText ?? "");
+  const anchorRect = options.anchorRect;
+  const hasAnchor =
+    !!anchorRect &&
+    Number.isFinite(anchorRect.x) &&
+    Number.isFinite(anchorRect.y) &&
+    Number.isFinite(anchorRect.width) &&
+    Number.isFinite(anchorRect.height);
+  const anchorX = hasAnchor ? Math.floor(anchorRect!.x) : 0;
+  const anchorY = hasAnchor ? Math.floor(anchorRect!.y) : 0;
+  const anchorWidth = hasAnchor ? Math.floor(anchorRect!.width) : 0;
+  const anchorHeight = hasAnchor ? Math.floor(anchorRect!.height) : 0;
+  const hasAutoConfirm = Number.isFinite(options.autoConfirmDelayMs);
+  const autoConfirmDelay = hasAutoConfirm
+    ? Math.max(0, Math.floor(options.autoConfirmDelayMs ?? 0))
+    : null;
+  const autoConfirmBlock =
+    hasAutoConfirm && autoConfirmDelay !== null
+      ? `
+$autoConfirmTimer = New-Object System.Windows.Forms.Timer
+$autoConfirmTimer.Interval = ${autoConfirmDelay}
+$autoConfirmTimer.Add_Tick({
+  $autoConfirmTimer.Stop()
+  $confirm.PerformClick()
+})
+$autoConfirmTimer.Start()
+`
+      : "";
 
   return `
 Add-Type -AssemblyName System.Windows.Forms
@@ -100,7 +140,7 @@ $smallFont = New-Object System.Drawing.Font('Segoe UI', 9)
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'ClarifyPad Probe'
-$form.StartPosition = 'CenterScreen'
+$form.StartPosition = 'Manual'
 $form.Size = New-Object System.Drawing.Size(640, 470)
 $form.TopMost = $true
 $form.FormBorderStyle = 'FixedDialog'
@@ -166,6 +206,7 @@ $inputBox.ForeColor = $textPrimary
 $inputBox.Font = $bodyFont
 $inputBox.Location = New-Object System.Drawing.Point(1, 1)
 $inputBox.Size = New-Object System.Drawing.Size(582, 224)
+$inputBox.Text = '${prefillText}'
 $inputBox.ImeMode = 'On'
 $inputBox.Add_KeyDown({
   if ($_.Control -and $_.KeyCode -eq [System.Windows.Forms.Keys]::Enter) {
@@ -224,8 +265,26 @@ $form.Controls.Add($cancel)
 $form.CancelButton = $cancel
 
 $form.Add_Shown({
+  $workingArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
+  $panelX = [Math]::Round(($workingArea.Width - $form.Width) / 2)
+  $panelY = [Math]::Round(($workingArea.Height - $form.Height) / 2)
+
+  ${hasAnchor ? `$anchorLeft = ${anchorX}
+  $anchorTop = ${anchorY}
+  $anchorWidth = ${anchorWidth}
+  $anchorHeight = ${anchorHeight}
+  $desiredX = $anchorLeft + [Math]::Round($anchorWidth / 2) - [Math]::Round($form.Width / 2)
+  $desiredY = $anchorTop + $anchorHeight + 12
+  $panelX = [Math]::Max($workingArea.Left, [Math]::Min($workingArea.Right - $form.Width, $desiredX))
+  $panelY = [Math]::Max($workingArea.Top, [Math]::Min($workingArea.Bottom - $form.Height, $desiredY))` : ""}
+  
+  $form.Location = New-Object System.Drawing.Point($panelX, $panelY)
   $inputBox.Focus()
+  $inputBox.SelectionStart = $inputBox.TextLength
+  $inputBox.SelectionLength = 0
 })
+
+${autoConfirmBlock}
 
 [void]$form.ShowDialog()
 

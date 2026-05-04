@@ -18,6 +18,9 @@
   - 真实 App 验证结果汇总统计能力
   - Windows 目标 App 验证会话脚本（矩阵录入）
   - Windows `caretRect` 探测尝试（基于 TextPattern 选区矩形）
+  - 探针面板驱动的验证记录脚本（`probe:win:panel:record`）
+  - `panel -> notepad` smoke 稳定性修正（预填+自动确认，移除 UIAutomation 脆弱步骤）
+  - 探针面板按输入焦点锚点就近弹出（无锚点时居中）
   - 基础测试与类型检查链路
 
 ## Next Steps
@@ -27,7 +30,6 @@
   - 最小浮层交互壳
   - 扩大到更多真实 App 的插入验证
 - 修正自动化 `panel -> notepad` smoke harness 的 PowerShell 对话框退出语义问题
-- 修正自动化 `panel -> notepad` smoke harness 的 UIAutomation 输入框识别不稳定问题
 - Windows 最小链路跑通后，按同接口做 macOS `v0.0` 探针。
 - 两端插入链路都验证后，再进入 `v0.1` AI 最小闭环。
 

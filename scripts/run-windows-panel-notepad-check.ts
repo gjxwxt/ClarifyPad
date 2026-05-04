@@ -24,10 +24,7 @@ async function main(): Promise<void> {
     await activateWindowByPid(pid);
     await delay(500);
 
-    const panelRun = runPanelProcess();
-    await delay(1500);
-    await submitPanelInput(rawInput);
-
+    const panelRun = runPanelProcess(rawInput);
     const panelProcessResult = await panelRun;
     await delay(600);
 
@@ -50,7 +47,7 @@ async function main(): Promise<void> {
   }
 }
 
-async function runPanelProcess(): Promise<{
+async function runPanelProcess(rawInput: string): Promise<{
   exitCode: number | null;
   stdout: string;
   stderr: string;
@@ -58,7 +55,14 @@ async function runPanelProcess(): Promise<{
   return new Promise((resolvePromise, reject) => {
     const child = spawn(
       "node",
-      ["./node_modules/tsx/dist/cli.mjs", "./scripts/run-windows-probe-panel.ts"],
+      [
+        "./node_modules/tsx/dist/cli.mjs",
+        "./scripts/run-windows-probe-panel.ts",
+        "--prefill",
+        rawInput,
+        "--auto-confirm-ms",
+        "250"
+      ],
       {
         cwd: process.cwd(),
         stdio: ["ignore", "pipe", "pipe"],
@@ -84,110 +88,6 @@ async function runPanelProcess(): Promise<{
       });
     });
   });
-}
-
-async function submitPanelInput(rawInput: string): Promise<void> {
-  const command = `
-Add-Type -AssemblyName UIAutomationClient
-Add-Type -AssemblyName System.Windows.Forms
-$inputApplied = $false
-
-try {
-$root = [System.Windows.Automation.AutomationElement]::RootElement
-$windowCondition = New-Object System.Windows.Automation.PropertyCondition(
-  [System.Windows.Automation.AutomationElement]::NameProperty,
-  'ClarifyPad Probe'
-)
-
-$window = $null
-for ($i = 0; $i -lt 30; $i++) {
-  $window = $root.FindFirst(
-    [System.Windows.Automation.TreeScope]::Children,
-    $windowCondition
-  )
-  if ($null -ne $window) { break }
-  Start-Sleep -Milliseconds 200
-}
-
-if ($null -eq $window) {
-  throw 'ClarifyPad Probe window not found.'
-}
-
-$allDescendants = $window.FindAll(
-  [System.Windows.Automation.TreeScope]::Descendants,
-  [System.Windows.Automation.Condition]::TrueCondition
-)
-
-$targetInput = $null
-$valuePattern = $null
-for ($idx = 0; $idx -lt $allDescendants.Count; $idx++) {
-  $candidate = $allDescendants.Item($idx)
-  $candidateValuePattern = $null
-  if ($candidate.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern, [ref]$candidateValuePattern)) {
-    if (-not $candidate.Current.IsKeyboardFocusable) {
-      continue
-    }
-
-    if (-not $candidate.Current.IsEnabled) {
-      continue
-    }
-
-    $targetInput = $candidate
-    $valuePattern = $candidateValuePattern
-    break
-  }
-}
-
-if ($null -eq $targetInput -or $null -eq $valuePattern) {
-  throw 'Probe input box not found for UI Automation.'
-}
-
-$valuePattern.SetValue('${toPowerShellSingleQuoted(rawInput)}')
-Start-Sleep -Milliseconds 150
-$inputApplied = $true
-
-$buttonCondition = New-Object System.Windows.Automation.AndCondition(
-  (New-Object System.Windows.Automation.PropertyCondition(
-    [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
-    [System.Windows.Automation.ControlType]::Button
-  )),
-  (New-Object System.Windows.Automation.PropertyCondition(
-    [System.Windows.Automation.AutomationElement]::NameProperty,
-    '确认插入'
-  ))
-)
-$confirmButton = $window.FindFirst(
-  [System.Windows.Automation.TreeScope]::Descendants,
-  $buttonCondition
-)
-
-if ($null -eq $confirmButton) {
-  throw 'Probe confirm button not found.'
-}
-
-$invokePattern = $null
-if (-not $confirmButton.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern, [ref]$invokePattern)) {
-  throw 'Probe confirm button does not support InvokePattern.'
-}
-
-$invokePattern.Invoke()
-} catch {
-  # Fallback for environments where UI Automation cannot resolve WinForms textbox patterns.
-  Set-Clipboard -Value '${toPowerShellSingleQuoted(rawInput)}'
-  $wshell = New-Object -ComObject WScript.Shell
-  [void]$wshell.AppActivate('ClarifyPad Probe')
-  Start-Sleep -Milliseconds 250
-  if (-not $inputApplied) {
-    [System.Windows.Forms.SendKeys]::SendWait('^a')
-    Start-Sleep -Milliseconds 120
-    [System.Windows.Forms.SendKeys]::SendWait('^v')
-  }
-  Start-Sleep -Milliseconds 120
-  [System.Windows.Forms.SendKeys]::SendWait('^{ENTER}')
-}
-`;
-
-  await runPowerShell(command);
 }
 
 async function launchNotepad(filePath: string): Promise<number> {
@@ -252,12 +152,12 @@ async function runPowerShell(script: string): Promise<string> {
   return stdout.trimEnd();
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolvePromise) => setTimeout(resolvePromise, ms));
-}
-
 function toPowerShellSingleQuoted(value: string): string {
   return value.replace(/'/g, "''");
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolvePromise) => setTimeout(resolvePromise, ms));
 }
 
 main().catch((error: unknown) => {
