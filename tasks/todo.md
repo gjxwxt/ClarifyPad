@@ -2,17 +2,20 @@
 
 ## Current Phase
 
-- 当前处于项目初始化完成后的 `v0.0` 技术探针规划阶段。
+- 当前处于 `v0.0` 技术探针第一段实现阶段。
+- 已完成：
+  - 共享 `PlatformBridge` 接口与探针结果模型
+  - `TechnicalProbeService` 探针编排骨架
+  - Windows PowerShell 前台应用上下文探针
+  - 基础测试与类型检查链路
 
 ## Next Steps
 
-- 定义 `PlatformBridge` 的最小跨平台接口。
-- 先实现 Windows `v0.0` 技术探针闭环：
-  - 全局快捷键唤起
-  - 浮层显示
-  - 输入确认
-  - 插回原输入框
-  - fallback 与埋点
+- 继续实现 Windows `v0.0` 技术探针闭环：
+  - 焦点/输入框识别
+  - 选区或光标位置探测
+  - 插入与 clipboard fallback 的真实验证
+  - 最小浮层交互壳
 - Windows 最小链路跑通后，按同接口做 macOS `v0.0` 探针。
 - 两端插入链路都验证后，再进入 `v0.1` AI 最小闭环。
 
