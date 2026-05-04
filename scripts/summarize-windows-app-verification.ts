@@ -14,6 +14,20 @@ async function main(): Promise<void> {
   const records = parseVerificationJsonl(content);
   const summary = summarizeVerificationRecords(records);
   const coverage = summarizeTargetCoverage(records, WINDOWS_TARGET_APPS);
+  const untestedTargets = coverage.items
+    .filter((item) => item.status === "untested")
+    .map((item) => ({
+      appName: item.targetAppName,
+      scenario: item.targetScenario
+    }));
+  const needsAttentionTargets = coverage.items
+    .filter((item) => item.status === "needs_attention")
+    .map((item) => ({
+      appName: item.targetAppName,
+      passRate: item.passRate,
+      fail: item.fail,
+      manualPaste: item.manualPaste
+    }));
 
   const passRate =
     summary.total === 0 ? 0 : Number(((summary.pass / summary.total) * 100).toFixed(1));
@@ -28,7 +42,9 @@ async function main(): Promise<void> {
         manualPaste: summary.manualPaste,
         passRate,
         byApp: summary.byApp,
-        coverage
+        coverage,
+        untestedTargets,
+        needsAttentionTargets
       },
       null,
       2
