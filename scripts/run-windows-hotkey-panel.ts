@@ -121,30 +121,15 @@ async function main(): Promise<void> {
       continue;
     }
 
-    await bridge.activateApp(startResult.activeApp);
-    await delay(80);
-
-    const postFocusContext = await bridge.getFocusContext();
-    if (postFocusContext.isPasswordField) {
-      console.log(
-        JSON.stringify(
-          {
-            phase: "confirm_blocked",
-            reason: "password_field",
-            focusContext: postFocusContext
-          },
-          null,
-          2
-        )
-      );
-      if (options.once) {
-        return;
-      }
-      continue;
-    }
-
     const confirmBegin = performance.now();
-    const confirmResult = await service.confirm(startResult.activeApp, panelResult.rawInput);
+    let confirmResult = await service.confirm(startResult.activeApp, panelResult.rawInput);
+    let retriedAfterActivate = false;
+    if (confirmResult.status === "failed") {
+      await bridge.activateApp(startResult.activeApp);
+      await delay(80);
+      confirmResult = await service.confirm(startResult.activeApp, panelResult.rawInput);
+      retriedAfterActivate = true;
+    }
     const confirmCostMs = Number((performance.now() - confirmBegin).toFixed(1));
     console.log(
       JSON.stringify(
@@ -152,6 +137,7 @@ async function main(): Promise<void> {
           phase: "confirm",
           telemetryPath,
           costMs: confirmCostMs,
+          retriedAfterActivate,
           totalAfterHotkeyMs: Number((performance.now() - triggerAt).toFixed(1)),
           result: confirmResult
         },
