@@ -164,5 +164,5 @@ export function createProbeOutput(rawInput: string): string {
     throw new Error("Probe input cannot be empty.");
   }
 
-  return `[整理后] ${normalized}`;
+  return normalized;
 }

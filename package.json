@@ -12,7 +12,8 @@
     "probe:win:session": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-probe-session.ts",
     "probe:win:notepad": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-notepad-insert-check.ts",
     "probe:win:panel": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-probe-panel.ts",
-    "probe:win:panel:notepad": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-panel-notepad-check.ts"
+    "probe:win:panel:notepad": "node ./node_modules/tsx/dist/cli.mjs scripts/run-windows-panel-notepad-check.ts",
+    "probe:win:record": "node ./node_modules/tsx/dist/cli.mjs scripts/record-windows-app-verification.ts"
   },
   "devDependencies": {
     "@types/node": "^22.15.17",

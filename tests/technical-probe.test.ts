@@ -89,9 +89,9 @@ class FakeTelemetry implements ProbeTelemetry {
 }
 
 describe("createProbeOutput", () => {
-  it("adds the probe prefix to trimmed text", () => {
+  it("returns the trimmed text without extra probe prefix", () => {
     expect(createProbeOutput("  这个需求让研发尽快做  ")).toBe(
-      "[整理后] 这个需求让研发尽快做"
+      "这个需求让研发尽快做"
     );
   });
 
@@ -212,13 +212,13 @@ describe("TechnicalProbeService", () => {
 
     expect(bridge.insertRequests).toEqual([
       {
-        text: "[整理后] 这个需求让研发尽快做",
+        text: "这个需求让研发尽快做",
         mode: "insert_at_caret"
       }
     ]);
     expect(result).toMatchObject({
       status: "completed",
-      output: "[整理后] 这个需求让研发尽快做",
+      output: "这个需求让研发尽快做",
       insertResult: {
         success: true,
         method: "clipboard_paste",
